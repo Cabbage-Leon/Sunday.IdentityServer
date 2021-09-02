@@ -1,0 +1,181 @@
+﻿
+@{
+    ViewData["Title"] = "Create";
+}
+<style>
+    section.todoapp {
+    }
+
+    input.Client-input {
+        /*float: right;*/
+        width: 100%;
+        height: 28px;
+        margin: 5px;
+        border: 0;
+        border-bottom: 1px dashed;
+    }
+
+    .Client-select {
+        width: 100%;
+        height: 28px;
+        margin: 5px;
+        border: 0;
+        border-bottom: 1px dashed;
+    }
+
+    section.main {
+        height: 38px;
+        text-align: left;
+        line-height: 38px;
+    }
+
+    footer.info {
+        margin-top: 20px;
+    }
+
+    .todoapp .title {
+        float: left;
+        width: 130px;
+    }
+
+    .todoapp .contents {
+        float: left;
+        width: calc(100% - 200px);
+    }
+
+    .h-50 {
+        height: 50px !important;
+    }
+
+    .l-h-20 {
+        line-height: 20px;
+    }
+</style>
+<script src="~/js/axios.min.js"></script>
+<script src="~/js/vue.min.js"></script>
+<section class="todoapp">
+    <h3>{{ title }}</h3>
+
+    <section class="main" v-cloak>
+        <div class="title">客户端Id：</div>
+        <div class="contents"><input class="Client-input" type="text" v-model="clientDto.clientId"></div>
+    </section>
+    <section class="main" v-cloak>
+        <div class="title">客户端名称：</div>
+        <div class="contents"><input class="Client-input" type="text" v-model="clientDto.clientName"></div>
+    </section>
+    <section class="main" v-cloak>
+        <div class="title">客户端密钥：</div>
+        <div class="contents"><input class="Client-input" type="text" v-model="clientDto.clientSecrets"></div>
+    </section>
+    <section class="main" v-cloak>
+        <div class="title">描述：</div>
+        <div class="contents"><input class="Client-input" type="text" v-model="clientDto.description"></div>
+    </section>
+    <section class="main" v-cloak>
+        <div class="title">允许的授权类型：</div>
+        <div class="contents"><input class="Client-input" type="text" v-model="clientDto.allowedGrantTypes"></div>
+    </section>
+    <section class="main h-50" v-cloak>
+        <div class="title l-h-20">允许将token通过浏览器传递：</div>
+        <div class="contents">
+            @*<input class="Client-input" type="text" v-model="clientDto.allowAccessTokensViaBrowser">*@
+            <select class="Client-select" v-model="clientDto.allowAccessTokensViaBrowser">
+                <option value="True">True</option>
+                <option value="False">False</option>
+            </select>
+        </div>
+    </section>
+    <section class="main" v-cloak>
+        <div class="title">作用域：</div>
+        <div class="contents"><input class="Client-input" type="text" v-model="clientDto.allowedScopes"></div>
+    </section>
+    <section class="main" v-cloak>
+        <div class="title">允许的跨域域名：</div>
+        <div class="contents"><input class="Client-input" type="text" v-model="clientDto.allowedCorsOrigins"></div>
+    </section>
+    <section class="main" v-cloak>
+        <div class="title">回调地址：</div>
+        <div class="contents"><input class="Client-input" type="text" v-model="clientDto.redirectUris"></div>
+    </section>
+    <section class="main" v-cloak>
+        <div class="title">退出的回调：</div>
+        <div class="contents"><input class="Client-input" type="text" v-model="clientDto.postLogoutRedirectUris"></div>
+    </section>
+    <footer class="info">
+        <input type="button" onclick="{ window.location.href='/clientsManager/index' }" class="btn btn-default" value="< Back">
+        <input type="button" class="btn btn-primary" @@click="saveClients" value="Submit">
+
+    </footer>
+    <script>
+    // app Vue instance
+    var app = new Vue({
+        // app initial state
+        data: {
+            clientDto: {
+                clientId:'',
+                clientName:'',
+                clientSecrets:'',
+                description:'',
+                allowAccessTokensViaBrowser:'',
+                allowedGrantTypes:'',
+                allowedScopes:'',
+                allowedCorsOrigins:'',
+                redirectUris:'',
+                postLogoutRedirectUris:'',
+            },
+            id: @(ViewBag.ClientId),
+            title: '添加',
+            editedTodo: null,
+            visibility: 'all'
+        },
+        created: function () {
+            let _this = this;
+            if (_this.id > 0) {
+                    _this.title = '编辑';
+            }
+            axios.get('/ClientsManager/GetDataById?id='+_this.id)
+                .then(function (response) {
+                    _this.clientDto = (response.data.response);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        },
+
+        // methods that implement data logic.
+        // note there's no DOM manipulation here at all.
+        methods: {
+            saveClients: function () {
+                let _this = this;
+                _this.clientDto.id = _this.id;
+                console.log(_this.clientDto);
+                if (!_this.clientDto.clientId) {
+                    alert('数据不能为空');
+                    return;
+                }
+                axios.post('/ClientsManager/SaveData', _this.clientDto )
+                    .then(function (response) {
+                        console.log(response);
+                        if (response.data.success) {
+                            alert("提交成功");
+                            window.location.href='/clientsManager/index'
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+
+            },
+
+
+        },
+
+    })
+
+
+    // mount
+    app.$mount('.todoapp')
+
+
+    </script>

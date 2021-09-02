@@ -1,0 +1,13 @@
+﻿@{
+    ViewData["Title"] = "Access denied";
+}
+<br/>
+<header>
+    <div class="alert alert-danger">
+        <h2 class="text-danger">@ViewData["Title"]</h2>
+    </div>
+    <p class="text-danger">You do not have access to this resource.</p>
+    <p class="text-danger">
+        @Html.Raw(ViewBag.ErrorMsg)
+    </p>
+</header>
