@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 using System;
+using System.IO;
 using System.Reflection;
 using IdentityServer4.Configuration;
 using Microsoft.AspNetCore.Authorization;
@@ -35,8 +36,10 @@ namespace Sunday.IdentityServer
         {
             services.AddSameSiteCookiePolicy();
 
+            string connectionStringFile = Configuration.GetConnectionString("DefaultConnection_file");
+            var connectionString = File.Exists(connectionStringFile) ? File.ReadAllText(connectionStringFile).Trim() : Configuration.GetConnectionString("DefaultConnection");
             //使用NET CORE 内置的IdentityUser，ApplicationDbContext是继承自他
-            services.AddDbContext<ApplicationDbContext>(options => options.UseMySql(Configuration.GetConnectionString("Users")));
+            services.AddDbContext<ApplicationDbContext>(options => options.UseMySql(connectionString));
 
             //启用 Identity 服务 添加指定的用户和角色类型的默认标识系统配置
             services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -98,7 +101,6 @@ namespace Sunday.IdentityServer
                 iis.AutomaticAuthentication = false;
             });
 
-            var connectionString = Configuration.GetConnectionString("Configuration");
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
             var builder = services.AddIdentityServer(options =>
