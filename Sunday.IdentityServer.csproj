@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Sunday.IdentityServer.sln" />
     <None Include="wwwroot\lib\bootstrap\css\bootstrap.css.map" />
     <None Include="wwwroot\lib\bootstrap\fonts\glyphicons-halflings-regular.svg" />
     <None Include="wwwroot\lib\bootstrap\fonts\glyphicons-halflings-regular.woff2" />

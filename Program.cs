@@ -3,6 +3,7 @@
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -13,61 +14,55 @@ namespace Sunday.IdentityServer
 {
     public class Program
     {
-        public static int Main(string[] args)
+        public static void Main(string[] args)
         {
+            Console.Title = "IdentityServerWithEfAndAspNetIdentity";
+
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .MinimumLevel.Override("System", LogEventLevel.Warning)
                 .MinimumLevel.Override("Microsoft.AspNetCore.Authentication", LogEventLevel.Information)
                 .Enrich.FromLogContext()
-                // uncomment to write to Azure diagnostics stream
-                //.WriteTo.File(
-                //    @"D:\home\LogFiles\Application\identityserver.txt",
-                //    fileSizeLimitBytes: 1_000_000,
-                //    rollOnFileSizeLimit: true,
-                //    shared: true,
-                //    flushToDiskInterval: TimeSpan.FromSeconds(1))
+                .WriteTo.File(@"Logs/identityserver4_log.txt")
                 .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}", theme: AnsiConsoleTheme.Literate)
                 .CreateLogger();
 
-            try
+            var seed = args.Contains("/seed");
+            if (seed)
             {
-                var seed = args.Contains("/seed");
-                if (seed)
-                {
-                    args = args.Except(new[] { "/seed" }).ToArray();
-                }
-
-                var host = CreateHostBuilder(args).Build();
-
-                if (seed)
-                {
-                    SeedData.EnsureSeedData(host.Services);
-                }
-
-                Log.Information("Starting host...");
-                host.Run();
-                return 0;
+                args = args.Except(new[] { "/seed" }).ToArray();
             }
-            catch (Exception ex)
+
+            var host = CreateHostBuilder(args).Build();
+
+            if (seed)
             {
-                Log.Fatal(ex, "Host terminated unexpectedly.");
-                return 1;
+                SeedData.EnsureSeedData(host.Services);
             }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
+
+            host.Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                    webBuilder.UseSerilog();
-                    webBuilder.ConfigureKestrel(options => options.AllowSynchronousIO = true);
-                });
+         Host.CreateDefaultBuilder(args)
+           .ConfigureWebHostDefaults(webBuilder =>
+           {
+               webBuilder
+               .ConfigureKestrel(serverOptions =>
+               {
+                   serverOptions.AllowSynchronousIO = true;//启用同步 IO
+               })
+               .UseStartup<Startup>()
+               .UseUrls("http://*:5002")
+               .ConfigureLogging((hostingContext, builder) =>
+               {
+                   builder.ClearProviders();
+                   builder.SetMinimumLevel(LogLevel.Trace);
+                   builder.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                   builder.AddConsole();
+                   builder.AddDebug();
+               });
+           });
     }
 }

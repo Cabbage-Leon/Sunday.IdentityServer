@@ -103,6 +103,7 @@ namespace Sunday.IdentityServer
 
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
+            //Identity相关文档，自定义验证
             var builder = services.AddIdentityServer(options =>
                 {
                     options.Events.RaiseErrorEvents = true;
